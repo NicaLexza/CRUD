@@ -13,6 +13,12 @@ const Dashboard = () => {
     const storedUser = localStorage.getItem("username");
     if (storedUser) {
       setUser(storedUser);
+
+      const storedItems = localStorage.getItem(`items_${storedUser}`);
+      if (storedItems) {
+        setItems(JSON.parse(storedItems));
+      }
+
     } else {
       navigate("/login");
     }
@@ -21,12 +27,27 @@ const Dashboard = () => {
   const addItem = () => {
     if (newItem.trim() === "") return;
     const newItemObj = { id: Date.now(), name: newItem };
-    setItems([...items, newItemObj]);
+    const updatedItems = [...items, newItemObj];
+    setItems(updatedItems);
     setNewItem("");
+
+    localStorage.setItem(`items_${user}`, JSON.stringify(updatedItems));
+  };
+
+  const updateItem = (id, newName) => {
+    const updatedItems = items.map(item => (item.id === id ? { ...item, name: newName } : item));
+    setItems(updatedItems);
+
+    // Save updated items to localStorage
+    localStorage.setItem(`items_${user}`, JSON.stringify(updatedItems));
   };
 
   const deleteItem = (id) => {
-    setItems(items.filter(item => item.id !== id));
+    const updateItems = items.filter(item => item.id !== id);
+    setItems(updateItems);
+
+    localStorage.setItem(`items_${user}`, JSON.stringify(updatedItems));
+
   };
 
   return (
@@ -62,17 +83,21 @@ const Dashboard = () => {
         >
           Add Item
         </Button>
-        <List sx={{ mt: 2 }}>
-          {items.map((item) => (
-            <ListItem key={item.id} secondaryAction={
-              <IconButton edge="end" color="error" onClick={() => deleteItem(item.id)}>
-                <DeleteIcon />
-              </IconButton>
-            }>
-              <ListItemText primary={item.name} sx={{ color: "black" }} />
-            </ListItem>
-          ))}
-        </List>
+        <ul style={{ padding: 0, listStyle: "none" }}>
+        {items.map(item => (
+          <li key={item.id} style={{ display: "flex", alignItems: "center", marginTop: "10px" }}>
+            <TextField
+              fullWidth
+              value={item.name}
+              onChange={(e) => updateItem(item.id, e.target.value)}
+              sx={{ marginRight: '10px', borderRadius: '4px' }}
+            />
+            <Button variant="contained" color="secondary" onClick={() => deleteItem(item.id)} style={{ marginLeft: "10px", backgroundColor: '#202123', '&:hover': { backgroundColor: '#c51162' } }}>
+              Delete
+            </Button>
+          </li>
+        ))}
+      </ul>
         <Button 
           variant="outlined" 
           color="primary" 
